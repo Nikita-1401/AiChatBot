@@ -17,7 +17,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 3. Middleware
-app.use(cors());
+app.use(cors({
+  origin: "https://ai-chat-bot-tan.vercel.app/",
+  credentials: true
+}));
 app.use(express.json());
 
 // 4. Routes
@@ -29,6 +32,6 @@ app.get('/', (req, res) => {
 });
 
 // 5. Start Server
-app.listen(process.env.PORT || "https://ai-chat-bot-tan.vercel.app/",() => {
+app.listen(PORT, () => {
   console.log(` Server running in ESM mode at http://localhost:${PORT}`);
 });
