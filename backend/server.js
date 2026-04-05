@@ -17,10 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 3. Middleware
-app.use(cors({
-  origin: "https://ai-chat-bot-tan.vercel.app/",
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 // 4. Routes
