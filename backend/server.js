@@ -29,6 +29,6 @@ app.get('/', (req, res) => {
 });
 
 // 5. Start Server
-app.listen(PORT, () => {
+app.listen(process.env.PORT || "https://ai-chat-bot-tan.vercel.app/",() => {
   console.log(` Server running in ESM mode at http://localhost:${PORT}`);
 });
