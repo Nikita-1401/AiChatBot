@@ -1,4 +1,4 @@
-import  React,{ useState, useRef, useEffect } from 'react';
+import React,{ useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Message from './Message';
 import Input from './Input';
@@ -6,7 +6,7 @@ import { fetchBotResponse } from '../services/api.js';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
-    { text: "Ai bot is now  Online.", sender: "bot" }
+    { text: "Welcome to Ars Kreedashala. How can I help you today?", sender: "bot" }
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef(null);
@@ -18,53 +18,54 @@ const Chatbot = () => {
   }, [messages, isTyping]);
 
   const handleSend = async (text) => {
-    // 1. Add user message
     setMessages((prev) => [...prev, { text, sender: "user" }]);
     setIsTyping(true);
-
     try {
-      // 2. REAL BACKEND CALL (No more setTimeout)
       const botReply = await fetchBotResponse(text);
-      
-      // 3. Add AI response
       setMessages((prev) => [...prev, { text: botReply, sender: "bot" }]);
     } catch (error) {
-      console.error("Chat Error:", error);
-      setMessages((prev) => [...prev, { text: "Error: Check if backend server is running on port 5000.", sender: "bot" }]);
+      setMessages((prev) => [...prev, { text: "Connection error. Please try again later.", sender: "bot" }]);
     } finally {
       setIsTyping(false);
     }
   };
 
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center p-4 md:p-10 relative overflow-hidden font-sans"
-         style={{ background: 'radial-gradient(circle at center, #1b0a3d 0%, #08060f 100%)' }}>
+    <div className="w-full h-full md:h-[90vh] md:max-w-5xl flex flex-col z-10 bg-white md:rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
       
-      <div className="w-full max-w-6xl h-full flex flex-col z-10">
-        <header className="flex items-center justify-between py-4 border-b border-[#a3b18a]/10 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#a3b18a] animate-pulse" />
-            <span className="text-white/70 font-medium tracking-widest text-sm uppercase">AI CHATBOT</span>
-          </div>
-          <div className="text-[#a3b18a] text-xs font-bold">NODE_ACTIVE</div>
-        </header>
-
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 space-y-6 scrollbar-none">
-          <AnimatePresence mode="popLayout">
-            {messages.map((msg, index) => (
-              <Message key={index} message={msg} />
-            ))}
-          </AnimatePresence>
-          
-          {isTyping && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
-                        className="text-[#a3b18a] text-xs font-mono ml-4 tracking-widest animate-pulse">
-              SYNCING_WITH_GEMINI_3...
-            </motion.div>
-          )}
+      {/* Header - Ars Kreedashala Branding */}
+      <header className="flex items-center justify-between px-6 py-4 bg-[#707a33] text-white">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+          <span className="font-bold tracking-tight text-lg">KREEDASHALA AI</span>
         </div>
+        <div className="text-white/80 text-xs font-medium uppercase tracking-widest hidden sm:block">
+          Official Support
+        </div>
+      </header>
 
-        <div className="w-full max-w-4xl mx-auto pt-6 pb-4">
+      {/* Message Area */}
+      <div 
+        ref={scrollRef} 
+        className="flex-1 overflow-y-auto px-4 py-6 space-y-6 bg-[#f9f9f7] scrollbar-thin scrollbar-thumb-gray-300"
+      >
+        <AnimatePresence mode="popLayout">
+          {messages.map((msg, index) => (
+            <Message key={index} message={msg} />
+          ))}
+        </AnimatePresence>
+        
+        {isTyping && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
+                      className="text-[#707a33] text-xs font-semibold ml-4 animate-bounce">
+            Kreedashala AI is typing...
+          </motion.div>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="p-4 bg-white border-t border-gray-100">
+        <div className="max-w-4xl mx-auto">
           <Input onSend={handleSend} />
         </div>
       </div>

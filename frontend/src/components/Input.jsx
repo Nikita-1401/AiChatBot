@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
- 
+
 const Input = ({ onSend }) => {
   const [input, setInput] = useState('');
 
@@ -12,7 +12,6 @@ const Input = ({ onSend }) => {
   };
 
   const handleKeyDown = (e) => {
-    // If Enter is pressed without Shift, send the message
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -20,29 +19,25 @@ const Input = ({ onSend }) => {
   };
 
   return (
-    <div className="relative group drop-shadow-[0_0_20px_rgba(138,43,226,0.2)]">
-      <div 
-        className="relative bg-[#120d1d]/90 backdrop-blur-2xl rounded-[24px] p-1 flex items-center"
-        style={{ 
-          border: '1.5px solid transparent',
-          borderImage: 'linear-gradient(to right, #8a2be2, #d2691e) 1',
-        }}
-      >
+    <div className="relative group">
+      {/* Subtle Olive Glow on focus */}
+      <div className="absolute -inset-0.5 bg-[#707a33] rounded-[24px] blur opacity-10 group-focus-within:opacity-25 transition duration-500"></div>
+      
+      <div className="relative bg-white border-2 border-[#707a33]/20 rounded-[22px] flex items-center pr-2 focus-within:border-[#707a33] transition-all">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Provide complex widgets to improve..."
-          className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-white/20 px-6 py-4 resize-none text-base h-[60px] flex items-center"
+          placeholder="Ask about classes, coaches, or infrastructure..."
+          className="w-full bg-transparent border-none focus:ring-0 text-gray-800 placeholder-gray-400 px-6 py-4 resize-none text-base h-[56px] flex items-center"
           rows={1}
         />
 
         <button 
           onClick={handleSubmit}
-          className="mr-4 text-[#a3b18a] hover:text-white transition-all transform hover:scale-110 active:scale-90"
+          className="p-2 bg-[#707a33] text-white rounded-xl hover:bg-[#5a6328] transition-all transform active:scale-90 shadow-md"
         >
-          {/* Paper Plane Icon */}
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 rotate-330">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 rotate-330 mb-0.5">
             <path d="M3.4 20.4l17.45-7.48c.81-.35.81-1.49 0-1.84L3.4 3.6c-.66-.29-1.39.2-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87.99l.01 4.61c0 .71.73 1.2 1.39.92z" />
           </svg>
         </button>

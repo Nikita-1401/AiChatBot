@@ -10,15 +10,14 @@ const Message = ({ message }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full`}
     >
-      <div className={`max-w-[85%] px-6 py-4 rounded-3xl shadow-2xl relative ${
+      <div className={`max-w-[85%] sm:max-w-[75%] px-5 py-3 rounded-2xl shadow-sm relative ${
         isUser 
-          ? 'bg-[#a3b18a] text-[#1b1b1b] rounded-tr-none font-medium' // Olive green for user
-          : 'bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-tl-none' // Glass for bot
+          ? 'bg-[#707a33] text-white rounded-tr-none' 
+          : 'bg-[#eeeee4] text-[#2d2d2d] rounded-tl-none border border-gray-200'
       }`}>
-        <p className="text-[15px] leading-relaxed tracking-wide">{message.text}</p>
+        <p className="text-[15px] leading-relaxed">{message.text}</p>
         
-        {/* Subtle Timestamp */}
-        <span className={`text-[10px] mt-2 block opacity-40 ${isUser ? 'text-black' : 'text-white'}`}>
+        <span className={`text-[10px] mt-1.5 block opacity-60 font-mono ${isUser ? 'text-white' : 'text-gray-500'}`}>
           {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>

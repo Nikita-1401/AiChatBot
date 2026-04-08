@@ -3,11 +3,11 @@ import React from 'react';
 
 function App() {
   return (
-    <>
-    <div className="h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-      <Chatbot />
+    <div className="h-screen w-full bg-[#f4f4f0] flex items-center justify-center overflow-hidden">
+       {/* Subtle background texture or gradient */}
+       <div className="absolute inset-0 bg-gradient-to-tr from-[#e2e2d5] to-[#f4f4f0] z-0" />
+       <Chatbot />
     </div>
-    </>
   );
 }
 
