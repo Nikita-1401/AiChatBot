@@ -1,71 +1,94 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const FALLBACK_RESPONSE = "I'm sorry, I am specifically trained to assist with Ars Kreedashala sports services. I cannot answer queries unrelated to our academy or products.";
+const MODEL_FALLBACKS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"];
+let cachedModelName = null;
+
+const fetchSupportedModelNames = async () => {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`
+  );
+  if (!response.ok) {
+    throw new Error(`List models failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const models = data?.models || [];
+
+  return models
+    .filter((model) => Array.isArray(model?.supportedGenerationMethods) && model.supportedGenerationMethods.includes("generateContent"))
+    .map((model) => (model.name || "").replace(/^models\//, ""))
+    .filter(Boolean);
+};
+
+const generateWithAvailableModel = async (prompt) => {
+  let lastError;
+  const discoveredModels = await fetchSupportedModelNames();
+  const prioritizedModels = [
+    ...(cachedModelName ? [cachedModelName] : []),
+    ...MODEL_FALLBACKS,
+    ...discoveredModels,
+  ];
+  const uniqueModels = [...new Set(prioritizedModels)];
+
+  for (const modelName of uniqueModels) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      cachedModelName = modelName;
+      return result;
+    } catch (error) {
+      lastError = error;
+      console.warn(`Model ${modelName} failed:`, error?.message || error);
+    }
+  }
+
+  throw lastError || new Error("No available Gemini model could generate content.");
+};
 
 export const getAIResponse = async (req, res) => {
   try {
     const { message } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ error: "Empty message" });
+    if (!message) return res.status(400).json({ error: "Empty message" });
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: "Missing GEMINI_API_KEY in environment." });
     }
 
-    // Initialize the model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // --- STEP 1: SEMANTIC GUARDRAIL ---
-    // Instead of simple keywords, we ask the AI to categorize the intent.
-    const guardrailPrompt = `
-      Task: Determine if the following user query is related to Ars Kreedashala (a sports academy/infrastructure company).
-      Allowed topics: Sports coaching, academy registration, sports infrastructure, Ranchi sports, athletic training, Ars Kreedashala services.
-      Forbidden topics: Politics, General Knowledge, Math, Science, Other companies, Celebrities.
-
-      Query: "${message}"
-
-      If the query is related to Ars Kreedashala or sports training, respond with "ALLOWED".
-      Otherwise, respond with "BLOCKED".
-      Response (One word only):`;
-
-    const guardResult = await model.generateContent(guardrailPrompt);
-    const decision = guardResult.response.text().trim().toUpperCase();
-
-    if (decision.includes("BLOCKED")) {
-      return res.status(200).json({ reply: FALLBACK_RESPONSE });
-    }
-
-    // --- STEP 2: GENERATE RESPONSE ---
     const strictPrompt = `
-      System: You are the Ars Kreedashala AI. You are a strict corporate assistant.
-      Context: Ars Kreedashala is a sports academy in Ranchi providing infrastructure and coaching.
+      You are the official AI of Ars Kreedashala.
       
-      Instructions:
-      1. Answer the user's question ONLY using the context of sports and Ars Kreedashala.
-      2. If you find yourself answering something unrelated to sports or the company, stop and use the fallback.
-      3. Use a professional, sports-oriented tone.
+      RULES:
+      1. Only answer questions about Ars Kreedashala sports academy, coaching, products, and infrastructure.
+      2. For off-topic questions (politics, general knowledge, etc.), say ONLY: "${FALLBACK_RESPONSE}"
+      3. DO NOT use any Markdown, bolding, or asterisks (*). Provide raw text only.
 
       User Question: ${message}
-      Answer:`;
+      Answer:
+    `;
 
-    const result = await model.generateContent(strictPrompt);
-    const response = await result.response;
-    let text = response.text().trim();
-  
-    const checkOffTopic = ["president", "prime minister", "capital", "math", "history"].some(word => 
-      text.toLowerCase().includes(word)
-    );
+    const result = await generateWithAvailableModel(strictPrompt);
+    const text = result.response.text();
 
-    if (checkOffTopic) {
-      return res.status(200).json({ reply: FALLBACK_RESPONSE });
-    }
+    // Enforce plain text output even if the model adds markdown.
+    const cleanText = text
+      .replace(/\*/g, "")
+      .replace(/[`#_~]/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
 
-    return res.status(200).json({ reply: text });
+    return res.status(200).json({ reply: cleanText });
 
   } catch (error) {
-    console.error("❌ BACKEND ERROR:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    // Check your TERMINAL for this output
+    console.error("❌ CRASH DETECTED:", error.message);
+
+    return res.status(500).json({
+      reply: "I am having trouble connecting to the AI engine. Please ensure the API key is valid." 
+    });
   }
 };
